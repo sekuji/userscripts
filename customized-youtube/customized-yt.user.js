@@ -4,10 +4,10 @@
 // @namespace     https://sekuji.xyz
 // @author        sekuji | url: sekuji.xyz
 // @run-at        document-start
-// @version       1.1.0
+// @version       1.1.1
 // @grant         GM_xmlhttpRequest
 // @license       GPL-3.0-or-later
-// @icon          https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/YouTube_light_icon_%282017%29.svg/120px-YouTube_light_icon_%282017%29.svg.png
+// @icon          https://www.svgrepo.com/show/134513/youtube.svg
 // @match         *://*.youtube.com/*
 // @grant         GM_addStyle
 // @downloadURL https://update.greasyfork.org/scripts/498985/Customized%20Youtube.user.js
@@ -250,13 +250,6 @@
         document.head.appendChild(styleTag);
     }
 
-    function showPopup() {
-        const popup = document.getElementById('settingsPopup');
-        if (popup) {
-            popup.style.display = 'block';
-        }
-    }
-
     function closePopup() {
         const popup = document.getElementById('settingsPopup');
         if (popup) {
@@ -327,50 +320,94 @@
         `);
     }
 
-    function createSettingsButton() {
-
-        const container = document.querySelector('div#container.style-scope.ytd-masthead');
-        
-        if (container) {
-
-            const settingsButton = document.createElement('div');
-            settingsButton.id = 'settingsButton';
-            settingsButton.style.cssText = `
-                position: fixed;
-                top: 12px;
-                left: 190px;
-                width: 32px;
-                height: 32px;
-                cursor: pointer;
-                z-index: 9999;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background-color: rgba(0, 0, 0, 0.25);
-                border-radius: 50%;
-                transition: background-color 0.3s;
-            `;
+    function waitForElementAndCreateSettings(maxAttempts = 20, interval = 500) {
+        let attempts = 0;
     
-            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-            svg.setAttribute("width", "16");
-            svg.setAttribute("height", "16");
-            svg.setAttribute("fill", "#fff");
-            svg.setAttribute("class", "bi bi-gear-fill");
-            svg.setAttribute("viewBox", "0 0 16 16");
-            svg.innerHTML = `
-                <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/>
-            `;
-            
-            settingsButton.appendChild(svg);
-            
-            container.appendChild(settingsButton);
-            
-            settingsButton.addEventListener('click', showPopup);
+        function tryCreatingSettings() {
+            const startDiv = document.querySelector('div#start.style-scope.ytd-masthead');
+            const logoRenderer = document.querySelector('ytd-topbar-logo-renderer#logo.style-scope.ytd-masthead');
+    
+            if (startDiv && logoRenderer) {
+                console.log('Found necessary elements');
+                createSettingsButton(startDiv, logoRenderer);
+            } else if (attempts < maxAttempts) {
+                attempts++;
+                console.log(`Attempt ${attempts}: Elements not found. Retrying...`);
+                setTimeout(tryCreatingSettings, interval);
+            } else {
+                console.log("Failed to find the necessary elements after maximum attempts");
+                console.log("Current page structure:", document.body.innerHTML);
+            }
+        }
+    
+        tryCreatingSettings();
+    }
+    
+    function createSettingsButton(startDiv, logoRenderer) {
+        if (document.getElementById('settingsButton')) {
+            console.log('Settings button already exists');
+            return;
+        }
+    
+        console.log('Creating settings button');
+    
+        const settingsButton = document.createElement('div');
+        settingsButton.id = 'settingsButton';
+        settingsButton.style.cssText = `
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            background-color: rgba(0, 0, 0, 0.25);
+            border-radius: 50%;
+            transition: background-color 0.3s;
+            margin-left: 10px;
+            vertical-align: middle;
+        `;
+    
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        svg.setAttribute("width", "16");
+        svg.setAttribute("height", "16");
+        svg.setAttribute("fill", "#fff");
+        svg.setAttribute("class", "bi bi-gear-fill");
+        svg.setAttribute("viewBox", "0 0 16 16");
+        svg.innerHTML = `
+            <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/>
+        `;
+    
+        settingsButton.appendChild(svg);
+
+        startDiv.insertBefore(settingsButton, logoRenderer.nextSibling);
+    
+        console.log('Settings button created and inserted');
+
+        settingsButton.addEventListener('click', showPopup);
+    }
+    
+    function showPopup() {
+        const popup = document.getElementById('settingsPopup');
+        if (popup) {
+            popup.style.display = 'block';
         }
     }
     
-    createSettingsButton();
+    function initSettingsButton() {
+        console.log('Initializing settings button');
+        if (youtubeUrlRegex.test(document.location.href)) {
+            waitForElementAndCreateSettings();
+        } else {
+            console.log('Not a YouTube URL, skipping button creation');
+        }
+    }
+    
+    window.addEventListener('load', initSettingsButton);
+    
+    document.addEventListener('yt-navigate-finish', initSettingsButton);
+    
+    initSettingsButton();
 
     function init() {
         if (youtubeUrlRegex.test(document.location.href)) {
