@@ -409,44 +409,60 @@
     
     initSettingsButton();
 
+    function waitForElement(selector, callback) {
+        const observer = new MutationObserver((mutations, me) => {
+            const element = document.querySelector(selector);
+            if (element) {
+                callback(element);
+                me.disconnect();
+            }
+        });
+        observer.observe(document, {
+            childList: true,
+            subtree: true
+        });
+    }
+
     function init() {
         if (youtubeUrlRegex.test(document.location.href)) {
-            injectStyles(youtubeStyles);
-            createSettingsButton();
-            document.body.insertAdjacentHTML('beforeend', popupHTML);
-            document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
-            document.getElementById('closeSettingsBtn').addEventListener('click', closePopup);
+            waitForElement('#settingsButton', () => {
+                injectStyles(youtubeStyles);
+                createSettingsButton();
+                document.body.insertAdjacentHTML('beforeend', popupHTML);
+                document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
+                document.getElementById('closeSettingsBtn').addEventListener('click', closePopup);
     
-            const savedBackgroundUrl = localStorage.getItem('backgroundUrl');
-            const savedChatBackgroundUrl = localStorage.getItem('chatBackgroundUrl');
-            const enableProgressBar = localStorage.getItem('enableProgressBar') === 'true';
-            const enableDownloadButton = localStorage.getItem('enableDownloadButton') === 'true';
+                const savedBackgroundUrl = localStorage.getItem('backgroundUrl');
+                const savedChatBackgroundUrl = localStorage.getItem('chatBackgroundUrl');
+                const enableProgressBar = localStorage.getItem('enableProgressBar') === 'true';
+                const enableDownloadButton = localStorage.getItem('enableDownloadButton') === 'true';
     
-            applyBackground('body', savedBackgroundUrl || DEFAULT_BODY_BACKGROUND);
-            applyBackground('.style-scope.yt-live-chat-renderer.iron-selected', savedChatBackgroundUrl || DEFAULT_CHAT_BACKGROUND);
+                applyBackground('body', savedBackgroundUrl || DEFAULT_BODY_BACKGROUND);
+                applyBackground('.style-scope.yt-live-chat-renderer.iron-selected', savedChatBackgroundUrl || DEFAULT_CHAT_BACKGROUND);
     
-            if (savedBackgroundUrl) {
-                document.getElementById('backgroundUrl').value = savedBackgroundUrl;
-            }
+                if (savedBackgroundUrl) {
+                    document.getElementById('backgroundUrl').value = savedBackgroundUrl;
+                }
     
-            if (savedChatBackgroundUrl) {
-                document.getElementById('chatBackgroundUrl').value = savedChatBackgroundUrl;
-            }
+                if (savedChatBackgroundUrl) {
+                    document.getElementById('chatBackgroundUrl').value = savedChatBackgroundUrl;
+                }
     
-            document.getElementById('enableProgressBar').checked = enableProgressBar;
-            document.getElementById('enableDownloadButton').checked = enableDownloadButton;
+                document.getElementById('enableProgressBar').checked = enableProgressBar;
+                document.getElementById('enableDownloadButton').checked = enableDownloadButton;
     
-            if (enableProgressBar) {
-                injectProgressBarStyles();
-            }
+                if (enableProgressBar) {
+                    injectProgressBarStyles();
+                }
     
-            if (enableDownloadButton) {
-                createCustomDownloader();
-            } else {
-                removeCustomDownloader();
-            }
+                if (enableDownloadButton) {
+                    createCustomDownloader();
+                } else {
+                    removeCustomDownloader();
+                }
+            });
         }
-    }
+    }    
 
     document.addEventListener('DOMContentLoaded', init);
 })();
